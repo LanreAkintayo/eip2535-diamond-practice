@@ -12,6 +12,8 @@ const deployDiamondLoupeFacet:DeployFunction = async function(hre: HardhatRuntim
    const { deploy, log } = deployments
    const { deployer } = await getNamedAccounts()
 
+   const deployerSigner = await ethers.getSigner(deployer)
+
    log("\n")
    const diamondLoupeFacet = await deploy("DiamondLoupeFacet", {
     from: deployer,
@@ -24,29 +26,36 @@ const deployDiamondLoupeFacet:DeployFunction = async function(hre: HardhatRuntim
 
   const facetInstance = await ethers.getContract("DiamondLoupeFacet") 
 
-  // console.log("Facet instanc::::::", facetInstance)
-
-  // console.log("DiamondLoupeFacet", diamondLoupeFacet)
-
   console.log('DiamondLoupeFacet deployed:', diamondLoupeFacet.address, "\n")
 
 
   // Now let's add all the selectors of the diamondLoupeFacet to the diamond
-  /*
-  
-  {
-        address facetAddress;
-        FacetCutAction action;
-        bytes4[] functionSelectors;
-    }
 
-  */
   const cut = [{
-    address: diamondLoupeFacet.address,
+    facetAddress: diamondLoupeFacet.address,
     action: FacetCutAction.Add,
     functionSelectors: getSelectors(facetInstance)
+  }]
 
-}]
+  // Add the Diamond Loupe Facet and at the same time, invoke the init() function inside the DiamontInit contract.
+   const diamond = await ethers.getContract('Diamond')
+  const diamondCut = await ethers.getContractAt('IDiamondCut', diamond.address)
+
+   const diamondInit = await ethers.getContract('DiamondInit')
+   let tx
+   let receipt
+   // call to init function
+   let functionCall = diamondInit.interface.encodeFunctionData('init')
+ 
+   console.log("Function call: ", functionCall)
+
+   tx = await diamondCut.diamondCut(cut, diamondInit.address, functionCall)
+   // console.log('Diamond cut tx: ', tx.hash)
+   receipt = await tx.wait()
+   if (!receipt.status) {
+     throw Error(`Diamond upgrade failed: ${tx.hash}`)
+   }
+   console.log('Completed diamond cut')
 
 
 

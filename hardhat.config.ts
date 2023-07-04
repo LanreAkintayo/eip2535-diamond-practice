@@ -26,6 +26,7 @@ const config: HardhatUserConfig = {
       url: TESTNET_URL,
       chainId: 80001,
       blockConfirmations: 6,
+      // @ts-ignore
       accounts: {mnemonic: MNEMONIC},
     },
   },
@@ -36,6 +37,7 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: {
+      // @ts-ignore
       polygonMumbai: process.env.POLYGON_API_KEY
     },
     customChains: [

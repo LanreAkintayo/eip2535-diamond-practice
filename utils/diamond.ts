@@ -8,10 +8,7 @@ export const FacetCutAction = { Add: 0, Replace: 1, Remove: 2 }
 // get function selectors from ABI
 export const getSelectors = (contract: Contract) =>  {
   const signatures = Object.keys(contract.interface.functions)
-  console.log("Signatures: ", signatures)
   const selectors:any = signatures.reduce((acc: string[], val) => {
-    console.log("Acc: ", acc)
-    console.log("val: ", val)
     if (val !== 'init(bytes)') {
       acc.push(contract.interface.getSighash(val))
     }
