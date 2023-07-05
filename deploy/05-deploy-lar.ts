@@ -2,6 +2,8 @@ import { HardhatRuntimeEnvironment } from "hardhat/types"
 import { DeployFunction } from "hardhat-deploy/types"
 // import verify from "../utils/verify"
 import { developmentChains, networkConfig } from "../helper-hardhat-config"
+import { ethers } from "hardhat"
+
 
 const deployLAR: DeployFunction = async function (
   hre: HardhatRuntimeEnvironment
@@ -16,14 +18,16 @@ const deployLAR: DeployFunction = async function (
 
   log("----------------------------------------------------")
   log("Deploying LAR Token and waiting for confirmations...")
-  const lar = await deploy("LAR", {
+  const larDeployment = await deploy("LAR", {
     from: deployer,
     args: [],
     log: true,
     // we need to wait if on a live network so we can verify properly
     waitConfirmations: networkConfig[network.name].blockConfirmations || 0,
   })
-  log(`Lar deployed at ${lar.address}`)
+  log(`Lar deployed at ${larDeployment.address}`)
+
+
 //   if (
 //     !developmentChains.includes(network.name) &&
 //     process.env.ETHERSCAN_API_KEY

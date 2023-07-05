@@ -33,7 +33,13 @@ const config: HardhatUserConfig = {
   namedAccounts: {
     deployer: {
       default: 0,
-    }
+    },
+    treasury: {
+      default: 1,
+    },
+    developers: {
+      default: 2,
+    },
   },
   etherscan: {
     apiKey: {

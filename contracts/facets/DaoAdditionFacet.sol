@@ -11,20 +11,26 @@ Add one more function
 In the sendLAR() function, instead of sending 50 LAR, Update it to 100LAR
 Add a new state variable to the AppStorage and do something with it.
  */
-contract DaoFacetAddition is ReentrancyGuard {
+contract DaoAdditionFacet is ReentrancyGuard {
     AppStorage internal s;
 
-    function sendLAR(address receiver) external {
-        s.larToken.transfer(receiver, 50e18);
+    function sendLAR(address receiver) external returns(string memory) {
+        s.larToken.transfer(receiver, 100e18);
+
+        console.log("Inside DaoAdditionFacet: ");
+        console.log(address(s.larToken));
+
+        return "daoAdditionFacet ....";
     }
 
-   
+    function updateProposalList(uint256 proposalId) external {
+        s.proposalsList.push(proposalId);
+    }
 
-   
+    function getProposalsList() external view returns(uint256[] memory){
+        return s.proposalsList;
+    }
 
-  
-
- 
 
     
 }

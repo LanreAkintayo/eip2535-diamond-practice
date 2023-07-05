@@ -52,6 +52,8 @@ struct AppStorage {
     uint256 proposalId;
 
     mapping(uint256 => Proposal) proposals;
+
+    uint256[] proposalsList;
 }
 
 library LibAppStorage {

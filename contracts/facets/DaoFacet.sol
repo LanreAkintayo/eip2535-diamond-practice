@@ -115,8 +115,13 @@ contract DaoFacet is ReentrancyGuard {
         return s.proposals[id].voters;
     }
 
-    function sendLAR(address receiver) external {
+    function sendLAR(address receiver) external returns(string memory){
         s.larToken.transfer(receiver, 50e18);
+
+        console.log("Inside DaoFacet: ");
+        console.log(address(s.larToken));
+
+        return "daoFacet";
     }
 
     function voteProposalByQuadratic(

@@ -79,7 +79,11 @@ interface IDaoFacet{
 
     function sqrt(uint256 y) external pure returns (uint256 z);
 
-     function getProposals(uint256 proposalId) external view returns(Proposal memory);
+    function getProposals(uint256 proposalId) external view returns(Proposal memory);
+    
+    function updateProposalList(uint256 proposalId) external;
+
+    function getProposalsList() external view returns(uint256[] memory);
 
     
 }
