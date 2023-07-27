@@ -3,6 +3,7 @@ import { HardhatRuntimeEnvironment } from "hardhat/types"
 import { networkConfig, developmentChains } from "../helper-hardhat-config"
 import { DeployFunction } from "hardhat-deploy/types"
 import { ethers } from "hardhat"
+import { constants } from "ethers"
 
 /*
 Deploy the contract first
@@ -10,7 +11,7 @@ Add all the selectors inside the diamond and at the same time invoke the  initia
 */
 
 
-const deployDaoFacet:DeployFunction = async function(hre: HardhatRuntimeEnvironment) {
+const deployDaoFacet2:DeployFunction = async function(hre: HardhatRuntimeEnvironment) {
 
    // @ts-ignore
    const { getNamedAccounts, deployments, network } = hre
@@ -19,7 +20,7 @@ const deployDaoFacet:DeployFunction = async function(hre: HardhatRuntimeEnvironm
 
    // Deploy the contract first
    log("\n")
-   const daoFacetDeployment = await deploy("DaoFacet", {
+   const daoFacetDeployment = await deploy("DaoFacet2", {
     from: deployer,
     args: [],
     log: true,
@@ -27,35 +28,35 @@ const deployDaoFacet:DeployFunction = async function(hre: HardhatRuntimeEnvironm
     waitConfirmations: networkConfig[network.name].blockConfirmations || 0,
   })
 
-
-  const daoFacet = await ethers.getContract("DaoFacet") 
-
-  console.log('DaoFacet deployed:', daoFacet.address, "\n")
+  
 
 
-  // Now let's add all the selectors of the daoFacet to the diamond
+  const daoFacet2 = await ethers.getContract("DaoFacet2") 
+
+  console.log('DaoFacet2 deployed:', daoFacet2.address, "\n")
+
+
+  // Now let's add all the selectors of the daoFacet2 to the diamond
 
   const cut = [{
-    facetAddress: daoFacet.address,
+    facetAddress: daoFacet2.address,
     action: FacetCutAction.Add,
-    functionSelectors: getSelectors(daoFacet)
+    functionSelectors: getSelectors(daoFacet2)
   }]
 
-  // console.log(getSelectors(daoFacet))
+  // console.log(getSelectors(daoFacet2))
 
   // Add the Diamond Loupe Facet and at the same time, invoke the init() function inside the DiamontInit contract.
    const diamond = await ethers.getContract('Diamond')
   const diamondCut = await ethers.getContractAt('IDiamondCut', diamond.address)
-  const lar = await ethers.getContract('LAR')
+
+  console.log("Diamond::::::::::::::: ", diamond)
 
    let tx
    let receipt
-    // call to init function
-    let functionCall = daoFacet.interface.encodeFunctionData('initializeDao(address)', [lar.address])
- 
-   console.log("Function call: ", functionCall)
 
-   tx = await diamondCut.diamondCut(cut, daoFacet.address, functionCall)
+
+   tx = await diamondCut.diamondCut(cut, constants.AddressZero, "0x")
    // console.log('Diamond cut tx: ', tx.hash)
    receipt = await tx.wait()
    if (!receipt.status) {
@@ -65,6 +66,6 @@ const deployDaoFacet:DeployFunction = async function(hre: HardhatRuntimeEnvironm
 }
 
 
-export default deployDaoFacet
+export default deployDaoFacet2
 
-deployDaoFacet.tags = ["all", "daoFacet"]
+deployDaoFacet2.tags = ["all", "daoFacet2"]

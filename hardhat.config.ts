@@ -4,6 +4,8 @@ import "hardhat-gas-reporter"
 import "dotenv/config"
 import "hardhat-deploy"
 import "solidity-coverage"
+import "hardhat-contract-sizer"
+
 
 const TESTNET_URL = process.env.TESTNET_URL
 const MNEMONIC = process.env.MNEMONIC
@@ -41,6 +43,15 @@ const config: HardhatUserConfig = {
       default: 2,
     },
   },
+
+  contractSizer: {
+    alphaSort: true,
+    disambiguatePaths: false,
+    runOnCompile: false,
+    strict: true,
+  },
+
+
   etherscan: {
     apiKey: {
       // @ts-ignore

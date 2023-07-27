@@ -85,5 +85,11 @@ interface IDaoFacet{
 
     function getProposalsList() external view returns(uint256[] memory);
 
+    function getProposalsArray() external view returns (Proposal[] memory);
+
+    function getProposalsId() external view returns (uint256[] memory);
+
+     function deletePreviousData() external;
+  
     
 }

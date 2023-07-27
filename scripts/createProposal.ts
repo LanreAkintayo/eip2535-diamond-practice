@@ -8,27 +8,31 @@ interface Option {
 }
 
 async function createProposal() {
-    const dao = await ethers.getContract("Dao")
+    // const dao = await ethers.getContract("Dao")
+   const diamond = await ethers.getContract('Diamond')
+
+    const dao = await ethers.getContractAt('IDaoFacet', diamond.address)
+
     const lar = await ethers.getContract("LAR")
 
-    const title = "Will it populate all the data after casting a vote?"
-    const description = "Lorem ipsum dolor sit amet consectetur adipisicing elit. Maxime mollitia, molestiae quas vel sint commodi repudiandae voluptatum laborum numquam "
-    const proposalType = 0
+    const title = "Testing Quadratic Voting"
+    const description = "Will the quadratic mechanism work in a single try?"
+    const proposalType = 2
     const proposalStatus = 0
     const startDate = await now()
     const duration = sDuration.hours(48)
     const options: Option[] =  [{
             index: 0,
-            optionText:"Yes",
+            optionText:"I doubt it will work",
             vote: 0
         }, {
             index: 1,
-            optionText:"No",
+            optionText:"It will certainly work",
             vote: 0
         },
         {
             index: 2,
-            optionText:"It might work",
+            optionText:"It will never work ",
             vote: 0
         }
     ]

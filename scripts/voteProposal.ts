@@ -1,5 +1,5 @@
 import { Signer } from "ethers";
-import { ethers, getUnnamedAccounts } from "hardhat";
+import { ethers, getUnnamedAccounts, getNamedAccounts } from "hardhat";
 import {toWei, fromWei, now, sDuration, fastForwardTheTime} from "../utils/helper"
 
 interface Option {
@@ -9,8 +9,15 @@ interface Option {
 }
 
 async function voteProposal() {
-    const dao = await ethers.getContract("Dao")
+    const diamond = await ethers.getContract('Diamond')
+
+    const dao = await ethers.getContractAt('IDaoFacet', diamond.address)
+
     const lar = await ethers.getContract("LAR")
+
+   const { deployer, treasury } = await getNamedAccounts()
+
+const treasurySigner = await ethers.getSigner(treasury)
 
     const users = await getUnnamedAccounts()
     const user1:Signer = await ethers.getSigner(users[0])
@@ -23,14 +30,14 @@ async function voteProposal() {
     
     */
 
-    const approveTx = await lar.connect(user1).approve(dao.address, toWei(200))
+    const approveTx = await lar.connect(treasurySigner).approve(dao.address, toWei(200))
     await approveTx.wait(1);
 
-    const proposalId = 4
+    const proposalId = 1
 
     console.log("Voting a proposal.....")
 
-    const voteTx = await dao.connect(user1).voteProposalBySingleChoice(
+    const voteTx = await dao.connect(treasurySigner).voteProposalBySingleChoice(
         proposalId,
         0,
         182
