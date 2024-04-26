@@ -14,7 +14,7 @@ async function getAllProposals() {
 
    const diamond = await ethers.getContract('Diamond')
 
-    const dao = await ethers.getContractAt('IDaoFacet', diamond.address)
+    const dao = await ethers.getContractAt('IDaoFacet', diamond.target)
     const daoFacet = await ethers.getContract("DaoFacet")
     
     // console.log("Delete Receipt: ", deleteReceipt)

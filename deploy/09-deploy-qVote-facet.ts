@@ -4,7 +4,7 @@ import { networkConfig, developmentChains } from "../helper-hardhat-config"
 import { DeployFunction } from "hardhat-deploy/types"
 import { ethers } from "hardhat"
 import { fromWei, toWei } from "../utils/helper"
-import { constants } from "ethers"
+import { ZeroAddress } from "ethers"
 
 const deployQuadraticVoteFacet:DeployFunction = async function(hre: HardhatRuntimeEnvironment) {
 
@@ -18,7 +18,7 @@ const deployQuadraticVoteFacet:DeployFunction = async function(hre: HardhatRunti
   //  const diamond = await ethers.getContract('Diamond')
 
 
-   console.log("Diamond.address", diamond.address)
+   console.log("Diamond.target", diamond.target)
 
 
    // Deploy the contract first
@@ -34,16 +34,16 @@ const deployQuadraticVoteFacet:DeployFunction = async function(hre: HardhatRunti
 
   const quadraticVoteFacet = await ethers.getContract("QuadraticVoteFacet") 
 
-  console.log('QuadraticVoteFacet deployed:', quadraticVoteFacet.address, "\n")
+  console.log('QuadraticVoteFacet deployed:', quadraticVoteFacet.target, "\n")
 
-  console.log("Quadratic vote facet: ", quadraticVoteFacet)
+  // console.log("Quadratic vote facet: ", quadraticVoteFacet)
 
   // Let's send some LAR token to the contract
   // const lar = await ethers.getContract("LAR")
-  // await lar.transfer(diamond.address, toWei(100000)) 
+  // await lar.transfer(diamond.target, toWei(100000)) 
   
   // Let's call the sendLAR() function here
-    let dao = await ethers.getContractAt("IDaoFacet", diamond.address)
+    let dao = await ethers.getContractAt("IDaoFacet", diamond.target)
     
     // const before = fromWei(await lar.balanceOf(treasury))
 
@@ -68,24 +68,24 @@ const deployQuadraticVoteFacet:DeployFunction = async function(hre: HardhatRunti
 
   const cut = [
     {
-    facetAddress: quadraticVoteFacet.address,
+    facetAddress: quadraticVoteFacet.target,
     action: FacetCutAction.Add,
     functionSelectors: selectorsToAdd
   },
 //   {
-//     facetAddress: quadraticVoteFacet.address,
+//     facetAddress: quadraticVoteFacet.target,
 //     action: FacetCutAction.Replace,
 //     functionSelectors: selectorToReplace
 //   },
 ]
 
   // // Add the Diamond Loupe Facet and at the same time, invoke the init() function inside the DiamontInit contract.
-  const diamondCut = await ethers.getContractAt('IDiamondCut', diamond.address)
+  const diamondCut = await ethers.getContractAt('IDiamondCut', diamond.target)
 
-   let tx
+   let tx: any
    let receipt
 
-   tx = await diamondCut.diamondCut(cut, constants.AddressZero, "0x")
+   tx = await diamondCut.diamondCut(cut, ZeroAddress, "0x")
  
    receipt = await tx.wait()
 

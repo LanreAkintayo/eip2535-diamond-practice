@@ -15,7 +15,7 @@ const deployDiamond:DeployFunction = async function(hre: HardhatRuntimeEnvironme
 
    const diamondCutFacet = await ethers.getContract("DiamondCutFacet");
 
-   const args = [deployer, diamondCutFacet.address]
+   const args = [deployer, diamondCutFacet.target]
   
    const diamond = await deploy("Diamond", {
     from: deployer,

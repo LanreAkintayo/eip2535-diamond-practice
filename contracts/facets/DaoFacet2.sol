@@ -33,6 +33,10 @@ contract DaoFacet2 is ReentrancyGuard {
             "single choice voting not allowed"
         );
 
+        console.log("block.timestamp: ", block.timestamp );
+        console.log("proposal.startDAta: ", proposal.startDate );
+        console.log("proposal.duration: ", proposal.duration );
+
         require(
             block.timestamp < proposal.startDate + proposal.duration,
             "Proposal closed"

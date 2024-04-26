@@ -1,11 +1,10 @@
 import {developmentChains} from "../../helper-hardhat-config"
 import {network, deployments, ethers, getNamedAccounts, getUnnamedAccounts} from "hardhat"
 import { now, sDuration, toWei, fromWei, fastForwardTheTime } from "../../utils/helper"
-import { DaoFacet, LAR } from "../../typechain-types/index.js";
-import { ContractReceipt, ContractTransaction, Signer } from "ethers";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { ContractTransaction, Signer } from "ethers";
 import { assert, expect } from "chai";
-import { Diamond } from "../../typechain-types/Diamond";
+import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
+import { DaoFacet, Diamond, IDaoFacet, LAR } from "../../typechain-types";
 
 interface Option {
     index:number,
@@ -14,8 +13,8 @@ interface Option {
 }
 
 describe("DaoFacet", function () {
-    let daoFacet: DaoFacet;
-    let diamond: Diamond;
+    let daoFacet: IDaoFacet;
+    let diamond: any;
     let lar: LAR;
     let deployer;
     let deployerSigner:Signer;
@@ -36,13 +35,13 @@ describe("DaoFacet", function () {
         }
 
         diamond = await ethers.getContract("Diamond")
-        daoFacet = await ethers.getContractAt("IDaoFacet", diamond.address);
+        daoFacet = await ethers.getContractAt("IDaoFacet", diamond.target);
         lar = await ethers.getContract("LAR")
 
         title = "This is the title"
         description = "This is the description"
         proposalStatus = 1
-        startDate = await now()
+        startDate = await now() || 0
         duration = sDuration.hours(4)
 
        options =  [{
@@ -60,16 +59,14 @@ describe("DaoFacet", function () {
             vote: 0
         }
     ]
-
         // const currentProposal = await daoFacet.proposals(1);
         // const currentProposalOptions =  await daoFacet.getOptions(currentProposal[0])
         // const currentProposalVoters=  await daoFacet.getVoters(currentProposal[0])
-     
     })
 
     it("should vote by single choice", async function (){
 
-        const approveTx1 = await lar.approve(daoFacet.address, toWei(10))
+        const approveTx1 = await lar.approve(daoFacet.target, toWei(10))
         await approveTx1.wait(1);
 
         const daoTx = await daoFacet.createProposal(
@@ -82,28 +79,30 @@ describe("DaoFacet", function () {
             options
         ) 
 
-        const receipt: ContractReceipt = await daoTx.wait();
+        const receipt = await daoTx.wait();
 
-        const proposalCreated = receipt.events?.filter((x) => {return x.event == "ProposalCreated"});
-        const proposalArgs  = proposalCreated?.[0].args;
+        // const proposalCreated = receipt.events?.filter((x) => {return x.event == "ProposalCreated"});
+        // const proposalArgs  = proposalCreated?.[0].args;
 
-        const approveTx2:ContractTransaction = await lar.approve(daoFacet.address, toWei(40))
+        const approveTx2 = await lar.approve(daoFacet.target, toWei(40))
         await approveTx2.wait(1)
 
-        const voteTx1:ContractTransaction =  await daoFacet.voteProposalBySingleChoice(1, 0, toWei(20))
-        const receipt1:ContractReceipt = await voteTx1.wait(1)
+        const voteTx1 =  await daoFacet.voteProposalBySingleChoice(0, 0, toWei(20))
+        const receipt1 = await voteTx1.wait(1)
 
         const currentProposal = await daoFacet.getProposals(1);
 
-        await expect(daoFacet.voteProposalBySingleChoice(1, 0, toWei(20))).to.be.revertedWith("You've voted already")
+        await expect(daoFacet.voteProposalBySingleChoice(0, 0, toWei(20))).to.be.revertedWith("Voted already")
        
 
         await lar.connect(deployerSigner).transfer(user1.address, toWei(100));
+        await lar.connect(deployerSigner).transfer(user2.address, toWei(100));
 
-        await lar.connect(user1).approve(daoFacet.address, toWei(100))
+        await lar.connect(user1).approve(daoFacet.target, toWei(100))
+        await lar.connect(user2).approve(daoFacet.target, toWei(100))
 
-        const voteTx2:ContractTransaction =  await daoFacet.connect(user1).voteProposalBySingleChoice(1, 0, toWei(20))
-        const receipt2:ContractReceipt = await voteTx2.wait(1)
+        const voteTx2 =  await daoFacet.connect(user1).voteProposalBySingleChoice(0, 0, toWei(20))
+        const receipt2 = await voteTx2.wait(1)
 
         const [optionA, optionB] =  await daoFacet.getOptions(currentProposal[0])
         const currentProposalVoters=  await daoFacet.getVoters(currentProposal[0])
@@ -117,13 +116,13 @@ describe("DaoFacet", function () {
 
         await fastForwardTheTime(sDuration.hours(5))
 
-        await expect(daoFacet.voteProposalBySingleChoice(1, 0, toWei(20))).to.be.revertedWith("Proposal has closed")
+        await expect(daoFacet.connect(user2).voteProposalBySingleChoice(0, 0, toWei(20))).to.be.revertedWith("Proposal closed")
 
     })
 
     it("should vote by quadratic", async function(){
 
-        const approveTx1 = await lar.approve(daoFacet.address, toWei(10))
+        const approveTx1 = await lar.approve(daoFacet.target, toWei(10))
         await approveTx1.wait(1);
 
         const daoTx = await daoFacet.createProposal(
@@ -136,23 +135,23 @@ describe("DaoFacet", function () {
             options
         ) 
 
-        const receipt1: ContractReceipt = await daoTx.wait();
+        const receipt1 = await daoTx.wait();
 
         const indexes:number[] = [0, 2]
         const votingPower:string[] = [toWei(20), toWei(50)]
 
 
-        const approveTx = await lar.approve(daoFacet.address, toWei(70))
+        const approveTx = await lar.approve(daoFacet.target, toWei(70))
         await approveTx.wait(1)
         
         const voteTx1 = await daoFacet.voteProposalByQuadratic(
-            1,
+            0,
             indexes,
             votingPower
         )
         const receipt = await voteTx1.wait(1)
 
-        const [proposalId] = await daoFacet.getProposals(1);
+        const [proposalId] = await daoFacet.getProposals(0);
 
         const [optionA, optionB, optionC] =  await daoFacet.getOptions(proposalId)
         const currentProposalVoters=  await daoFacet.getVoters(proposalId)
@@ -170,7 +169,7 @@ describe("DaoFacet", function () {
 
     it("should vote by weighing", async function(){
 
-        const approveTx = await lar.approve(daoFacet.address, toWei(500))
+        const approveTx = await lar.approve(daoFacet.target, toWei(500))
         await approveTx.wait(1);
 
         const daoTx = await daoFacet.createProposal(
@@ -183,7 +182,7 @@ describe("DaoFacet", function () {
             options
         ) 
 
-        const receipt1: ContractReceipt = await daoTx.wait();
+        const receipt1 = await daoTx.wait();
 
         const indexes:number[] = [0, 1]
         const votingPower:string[] = [toWei(40), toWei(50)]
@@ -194,15 +193,15 @@ describe("DaoFacet", function () {
         const transferTx2 = await lar.transfer(user2.address, toWei(500))
         await transferTx2.wait(1)
         
-        const approveTx1 = await lar.connect(user1).approve(daoFacet.address, toWei(500))
+        const approveTx1 = await lar.connect(user1).approve(daoFacet.target, toWei(500))
         await approveTx1.wait(1)
         
-        const approveTx2 = await lar.connect(user2).approve(daoFacet.address, toWei(500))
+        const approveTx2 = await lar.connect(user2).approve(daoFacet.target, toWei(500))
         await approveTx2.wait(1)
         
         // Deployer votes 
         const voteTx1 = await daoFacet.voteProposalByWeighing(
-            1,
+            0,
             indexes,
             votingPower
         )
@@ -210,7 +209,7 @@ describe("DaoFacet", function () {
 
         // User 1 votes
         const voteTx2 = await daoFacet.connect(user1).voteProposalByWeighing(
-            1,
+            0,
             indexes,
             votingPower
         )
@@ -218,14 +217,14 @@ describe("DaoFacet", function () {
 
         // user 2 votes
         const voteTx3 = await daoFacet.connect(user2).voteProposalByWeighing(
-            1,
+            0,
             indexes,
             votingPower
         )
         await voteTx3.wait(1)
 
 
-        const [proposalId] = await daoFacet.getProposals(1);
+        const [proposalId] = await daoFacet.getProposals(0);
 
         const [optionA, optionB, optionC] =  await daoFacet.getOptions(proposalId)
         const currentProposalVoters=  await daoFacet.getVoters(proposalId)
